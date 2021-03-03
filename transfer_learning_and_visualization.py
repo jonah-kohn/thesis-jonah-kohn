@@ -24,7 +24,8 @@ import matplotlib.pyplot as plt
 from google.colab import drive
 drive.mount('/content/drive')
 
-datadir = 'drive/MyDrive/Alzheimers/'
+cwd = os.getcwd()
+datadir = cwd + "/Alzheimers"
 traindir = datadir + 'train/'
 validdir = datadir + 'valid/'
 testdir = datadir + 'test/'
@@ -71,8 +72,8 @@ def get_pretrained_model():
         param.requires_grad = False
 
     n_inputs = model.fc.in_features
-    
-    #Add to end of classifier 
+
+    #Add to end of classifier
     model.fc = nn.Sequential(
         nn.Linear(n_inputs, 256),
         nn.ReLU(), nn.Dropout(0.2),
@@ -80,7 +81,7 @@ def get_pretrained_model():
         nn.LogSoftmax(dim=1)
         )
 
-    #Check GPU availability 
+    #Check GPU availability
     if cuda.is_available():
         model = model.to('cuda')
 
@@ -209,7 +210,7 @@ def train(model,
                 else:
                     epochs_no_improve += 1
 
-                    #Early stopping 
+                    #Early stopping
                     if epochs_no_improve >= max_epochs_stop:
                         print(
                             f'\nTotal epochs: {epoch}. Best epoch: {best_epoch} with loss: {valid_loss_min:.2f} and acc: {100 * valid_acc:.2f}%'
@@ -234,7 +235,7 @@ def train(model,
     print(
         f'\nBest epoch: {best_epoch} with loss: {valid_loss_min:.2f} and acc: {100 * valid_acc:.2f}%'
     )
-   
+
     # Format history
     history = pd.DataFrame(
         history,
