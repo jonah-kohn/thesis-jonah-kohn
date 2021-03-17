@@ -485,7 +485,9 @@ if __name__ == '__main__':
     grad_cam = GradCam(model=model, feature_module=model.layer4, \
                        target_layer_names=["2"], use_cuda=args.use_cuda)
 
+    print(args.image_path)
     img = cv2.imread(args.image_path, 1)
+    print(img)
     img = np.float32(img) / 255
     # Opencv loads as BGR:
     print(img)
