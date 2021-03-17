@@ -2,7 +2,7 @@
 from torchvision import transforms, datasets, models
 import torch
 from torch import optim, cuda
-from torch.utils.data import DataLoader
+from torch.utils.data import DataLoader, Dataset
 from torch.autograd import Variable
 import torch.nn as nn
 
@@ -10,6 +10,8 @@ import numpy as np
 import pandas as pd
 import os
 
+import torch.nn.functional as F
+import torch.optim as optim
 
 from PIL import Image
 
@@ -249,197 +251,74 @@ model, _ = train(
     n_epochs=30
     )
 
+def get_sample(index):
+    """Returns the raw image, the transformed image, and the class."""
+    raw_image, class_index = dataset[index]
+    raw_image = np.array(raw_image)  # convert from PIL to numpy
+    image_tensor = input_transform(raw_image)
+    return raw_image, image_tensor, class_index
 
-def get_example_params(example_index):
-    """
-        Gets used variables for almost all visualizations, like the image, model etc.
-    Args:
-        example_index (int): Image id to use from examples
-    returns:
-        original_image (numpy arr): Original image read from the file
-        prep_img (numpy_arr): Processed image
-        target_class (int): Target class for the image
-        file_name_to_export (string): File name to export the visualizations
-        pretrained_model(Pytorch model): Model to use for the operations
-    """
-    # Pick one of the examples
-    example_list = ((traindir + 'ModerateDemented/mildDem0.jpg', 1),
-                    (traindir + 'NonDemented/nonDem0.jpg', 0))
-    img_path = example_list[example_index][0]
-    target_class = example_list[example_index][1]
-    file_name_to_export = img_path[img_path.rfind('/')+1:img_path.rfind('.')]
-    # Read image
-    original_image = Image.open(img_path).convert('RGB')
-    # Process image
-    prep_img = preprocess_image(original_image)
-    # Define model
-    pretrained_model = model
-    return (original_image,
-            prep_img,
-            target_class,
-            file_name_to_export,
-            pretrained_model)
 
-def save_class_activation_images(org_img, activation_map, file_name):
-    """
-        Saves cam activation map and activation map on the original image
-    Args:
-        org_img (PIL img): Original image
-        activation_map (numpy arr): Activation map (grayscale) 0-255
-        file_name (str): File name of the exported image
-    """
-    if not os.path.exists('../results'):
-        os.makedirs('../results')
-    # Grayscale activation map
-    heatmap, heatmap_on_image = apply_colormap_on_image(org_img, activation_map, 'hsv')
-    # Save colored heatmap
-    path_to_file = os.path.join('../results', file_name+'_Cam_Heatmap.png')
-    save_image(heatmap, path_to_file)
-    # Save heatmap on iamge
-    path_to_file = os.path.join('../results', file_name+'_Cam_On_Image.png')
-    save_image(heatmap_on_image, path_to_file)
-    # SAve grayscale heatmap
-    path_to_file = os.path.join('../results', file_name+'_Cam_Grayscale.png')
-    save_image(activation_map, path_to_file)
+def sensitivity_analysis(model, image_tensor, target_class=None, postprocess='abs'):
+    # image_tensor can be a pytorch tensor or anything that can be converted to a pytorch tensor (e.g. numpy, list)
 
-class CamExtractor():
-    """
-        Extracts cam features from the model
-    """
-    def __init__(self, model, target_layer):
-        self.model = model
-        self.target_layer = target_layer
-        self.gradients = None
+    image_tensor = torch.Tensor(image_tensor)  # convert numpy or list to tensor
+    X = Variable(image_tensor[None], requires_grad=True)  # add dimension to simulate batch
 
-    def save_gradient(self, grad):
-        self.gradients = grad
+    model.eval()
+    output = model(X)
+    output_class = output.max(1)[1].data.numpy()[0]
+    print('Image was classified as:', output_class)
 
-    def forward_pass_on_convolutions(self, x):
+    model.zero_grad()
+    one_hot_output = torch.zeros(output.size())
+    if target_class is None:
+        one_hot_output[0, output_class] = 1
+    else:
+        one_hot_output[0, target_class] = 1
+    output.backward(gradient=one_hot_output)
+
+    relevance_map = X.grad.data[0].numpy()
+
+    if postprocess == 'abs':  # as in Simonyan et al. (2013)
+        return np.abs(relevance_map)
+    elif postprocess == 'square':  # as in Montavon et al. (2018)
+        return relevance_map**2
+    elif postprocess is None:
+        return relevance_map
+    else:
+        raise ValueError()
+
+def guided_backprop(model, image_tensor, target_class=None, postprocess='abs'):
+
+    def relu_hook_function(module, grad_in, grad_out):
         """
-            Does a forward pass on convolutions, hooks the function at given layer
+        If there is a negative gradient, change it to zero.
         """
-        conv_output = None
-        modules = list(self.model.children())[:-1]
-        for module_pos, module in enumerate(modules):
-            x = module(x)  # Forward
-            if int(module_pos) == self.target_layer:
-                x.register_hook(self.save_gradient)
-                conv_output = x  # Save the convolution output on that layer
-        return conv_output, x
+        if isinstance(module, nn.ReLU):
+            return (torch.clamp(grad_in[0], min=0.0),)
 
-    def forward_pass(self, x):
-        """
-            Does a full forward pass on the model
-        """
-        # Forward pass on the convolutions
-        conv_output, x = self.forward_pass_on_convolutions(x)
-        x = x.view(x.size(0), -1)  # Flatten
-        # Forward pass on the classifier
-        x = self.model.classifier(x)
-        return conv_output, x
+    hook_handles = []
 
+    try:
+        # Loop through layers, hook up ReLUs with relu_hook_function, store handles to hooks.
+        for pos, module in model.features._modules.items():
+            if isinstance(module, nn.ReLU):
+                hook_handle = module.register_backward_hook(relu_hook_function)
+                hook_handles.append(hook_handle)
 
-def preprocess_image(pil_im, resize_im=True):
-    """
-        Processes image for CNNs
-    Args:
-        PIL_img (PIL_img): PIL Image or numpy array to process
-        resize_im (bool): Resize to 224 or not
-    returns:
-        im_as_var (torch variable): Variable that contains processed float tensor
-    """
-    # mean and std list for channels (Imagenet)
-    mean = [0.485, 0.456, 0.406]
-    std = [0.229, 0.224, 0.225]
+        # Calculate backprop with modified ReLUs.
+        relevance_map = sensitivity_analysis(model, image_tensor, target_class=target_class, postprocess=postprocess)
 
-    #ensure or transform incoming image to PIL image
-    if type(pil_im) != Image.Image:
-        try:
-            pil_im = Image.fromarray(pil_im)
-        except Exception as e:
-            print("could not transform PIL_img to a PIL Image object. Please check input.")
+    finally:
+        # Remove hooks from model.
+        # The finally clause re-raises any possible exceptions.
+        for hook_handle in hook_handles:
+            hook_handle.remove()
+            del hook_handle
 
-    # Resize image
-    if resize_im:
-        pil_im = pil_im.resize((224, 224), Image.ANTIALIAS)
+    return relevance_map
 
-    im_as_arr = np.float32(pil_im)
-    im_as_arr = im_as_arr.transpose(2, 0, 1)  # Convert array to D,W,H
-    # Normalize the channels
-    for channel, _ in enumerate(im_as_arr):
-        im_as_arr[channel] /= 255
-        im_as_arr[channel] -= mean[channel]
-        im_as_arr[channel] /= std[channel]
-    # Convert to float tensor
-    im_as_ten = torch.from_numpy(im_as_arr).float()
-    # Add one more channel to the beginning. Tensor shape = 1,3,224,224
-    im_as_ten.unsqueeze_(0)
-    # Convert to Pytorch variable
-    im_as_var = Variable(im_as_ten, requires_grad=True)
-    return im_as_var
-
-
-class GradCam():
-    """
-        Produces class activation map
-    """
-    def __init__(self, model, target_layer):
-        self.model = model
-        self.model.eval()
-        # Define extractor
-        self.extractor = CamExtractor(self.model, target_layer)
-
-    def generate_cam(self, input_image, target_class=None):
-        # Full forward pass
-        # conv_output is the output of convolutions at specified layer
-        # model_output is the final output of the model (1, 1000)
-        conv_output, model_output = self.extractor.forward_pass(input_image)
-        if target_class is None:
-            target_class = np.argmax(model_output.data.numpy())
-        # Target for backprop
-        one_hot_output = torch.FloatTensor(1, model_output.size()[-1]).zero_()
-        one_hot_output[0][target_class] = 1
-        # Zero grads
-        self.model.features.zero_grad()
-        self.model.classifier.zero_grad()
-        # Backward pass with specified target
-        model_output.backward(gradient=one_hot_output, retain_graph=True)
-        # Get hooked gradients
-        guided_gradients = self.extractor.gradients.data.numpy()[0]
-        # Get convolution outputs
-        target = conv_output.data.numpy()[0]
-        # Get weights from gradients
-        weights = np.mean(guided_gradients, axis=(1, 2))  # Take averages for each gradient
-        # Create empty numpy array for cam
-        cam = np.ones(target.shape[1:], dtype=np.float32)
-        # Multiply each weight with its conv output and then, sum
-        for i, w in enumerate(weights):
-            cam += w * target[i, :, :]
-        cam = np.maximum(cam, 0)
-        cam = (cam - np.min(cam)) / (np.max(cam) - np.min(cam))  # Normalize between 0-1
-        cam = np.uint8(cam * 255)  # Scale between 0-255 to visualize
-        cam = np.uint8(Image.fromarray(cam).resize((input_image.shape[2],
-                       input_image.shape[3]), Image.ANTIALIAS))/255
-        # ^ I am extremely unhappy with this line. Originally resizing was done in cv2 which
-        # supports resizing numpy matrices with antialiasing, however,
-        # when I moved the repository to PIL, this option was out of the window.
-        # So, in order to use resizing with ANTIALIAS feature of PIL,
-        # I briefly convert matrix to PIL image and then back.
-        # If there is a more beautiful way, do not hesitate to send a PR.
-
-        # You can also use the code below instead of the code line above, suggested by @ ptschandl
-        # from scipy.ndimage.interpolation import zoom
-        # cam = zoom(cam, np.array(input_image[0].shape[1:])/np.array(cam.shape))
-        return cam
-
-
-target_example = 0  # Snake
-(original_image, prep_img, target_class, file_name_to_export, pretrained_model) =\
-    get_example_params(target_example)
-# Grad cam
-grad_cam = GradCam(pretrained_model, target_layer=11)
-# Generate cam mask
-cam = grad_cam.generate_cam(prep_img, target_class)
-# Save mask
-save_class_activation_images(original_image, cam, file_name_to_export)
-print('Grad cam completed')
+image = guided_backprop(model, image_tensor, postprocess='abs')
+image = Image.fromarray(image)
+image.save(cwd+ "backprog.jpeg")
