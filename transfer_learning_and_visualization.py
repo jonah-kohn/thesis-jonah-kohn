@@ -319,6 +319,27 @@ def guided_backprop(model, image_tensor, target_class=None, postprocess='abs'):
 
     return relevance_map
 
-image = guided_backprop(model, image_tensor, postprocess='abs')
-image = Image.fromarray(image)
-image.save(cwd+ "backprog.jpeg")
+image, image_tensor, class_index = get_sample(0)
+map = guided_backprop(model, image_tensor, postprocess='abs')
+map = Image.fromarray(map)
+map.save(cwd + "backprop.jpeg")
+
+
+fig, axes = plt.subplots(2, 4, figsize=(15, 18))
+
+for i, vertical_axes in enumerate(axes.T):
+    image, image_tensor, class_index = get_sample(i)
+
+    plt.sca(vertical_axes[0])
+    plt.axis('off')
+    plt.imshow(image)
+    
+    plt.sca(vertical_axes[1])
+    plt.axis('off')
+    plt.imshow(sensitivity_analysis(model, image_tensor, postprocess='abs').max(0), cmap='gray')
+
+    plt.sca(vertical_axes[2])
+    plt.axis('off')
+    plt.imshow(guided_backprop(model, image_tensor, postprocess='abs').max(0), cmap='gray')
+
+plt.savefig('comparison.png')
