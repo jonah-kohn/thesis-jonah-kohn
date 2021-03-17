@@ -248,7 +248,7 @@ model, _ = train(
     )
 
 
-def get_example_params(example_index, model):
+def get_example_params(example_index):
     """
         Gets used variables for almost all visualizations, like the image, model etc.
     Args:
