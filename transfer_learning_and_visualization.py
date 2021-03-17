@@ -320,7 +320,7 @@ class CamExtractor():
         """
         conv_output = None
         modules = list(self.model.children())[:-1]
-        for module_pos, module in modules.items():
+        for module, module_pos in enumerate(modules):
             x = module(x)  # Forward
             if int(module_pos) == self.target_layer:
                 x.register_hook(self.save_gradient)
