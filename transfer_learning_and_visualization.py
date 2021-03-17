@@ -62,7 +62,6 @@ n_classes = 4
 def get_pretrained_model():
 
     model = models.vgg16_bn(pretrained=True)
-    print(model)
 
     #Freeze trained layers
     for param in model.parameters():
@@ -79,8 +78,8 @@ def get_pretrained_model():
         )
 
     #Check GPU availability
-    if cuda.is_available():
-        model = model.to('cuda')
+    # if cuda.is_available():
+    model = model.to('cuda')
 
     return model
 
