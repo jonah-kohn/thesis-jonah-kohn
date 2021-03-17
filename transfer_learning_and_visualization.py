@@ -300,10 +300,6 @@ def save_class_activation_images(org_img, activation_map, file_name):
     path_to_file = os.path.join('../results', file_name+'_Cam_Grayscale.png')
     save_image(activation_map, path_to_file)
 
-
-from misc_functions import get_example_params, save_class_activation_images
-
-
 class CamExtractor():
     """
         Extracts cam features from the model
