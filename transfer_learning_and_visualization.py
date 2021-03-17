@@ -28,7 +28,11 @@ image_transform = transforms.Compose([
         transforms.Resize(size=256),
         transforms.CenterCrop(size=224),
         transforms.ToTensor(),
-        transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
+        transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
+        transforms.RandomHorizontalFlip(p=0.5),
+        transforms.RandomVerticalFlip(p=0.5),
+        transforms.RandomRotation(180),
+        transforms.RandomRotation(90)
     ])
 
 data = {
@@ -244,32 +248,32 @@ model, history = train(
     n_epochs=30
     )
 
-#History plots
-plt.figure(figsize=(8, 6))
-for c in ['train_loss', 'valid_loss']:
-    plt.plot(
-        history[c], label=c)
-plt.legend()
-plt.xlabel('Epoch')
-plt.ylabel('Negative Log')
-plt.title('Loss')
-
-plt.figure(figsize=(8, 6))
-for c in ['train_acc', 'valid_acc']:
-    plt.plot(
-        100 * history[c], label=c)
-plt.legend()
-plt.xlabel('Epoch')
-plt.ylabel('Average Acc')
-plt.title('Accuracy')
-
-model, history = train(
-    model,
-    criterion,
-    optimizer,
-    dataloaders['train'],
-    dataloaders['val'],
-    save_file_name=save_file_name,
-    max_epochs_stop=5,
-    n_epochs=30,
-    print_every=2)
+# #History plots
+# plt.figure(figsize=(8, 6))
+# for c in ['train_loss', 'valid_loss']:
+#     plt.plot(
+#         history[c], label=c)
+# plt.legend()
+# plt.xlabel('Epoch')
+# plt.ylabel('Negative Log')
+# plt.title('Loss')
+#
+# plt.figure(figsize=(8, 6))
+# for c in ['train_acc', 'valid_acc']:
+#     plt.plot(
+#         100 * history[c], label=c)
+# plt.legend()
+# plt.xlabel('Epoch')
+# plt.ylabel('Average Acc')
+# plt.title('Accuracy')
+#
+# model, history = train(
+#     model,
+#     criterion,
+#     optimizer,
+#     dataloaders['train'],
+#     dataloaders['val'],
+#     save_file_name=save_file_name,
+#     max_epochs_stop=5,
+#     n_epochs=30,
+#     print_every=2)
