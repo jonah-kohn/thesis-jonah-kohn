@@ -61,7 +61,7 @@ n_classes = 4
 
 def get_pretrained_model():
 
-    model = models.resnet50(pretrained=True)
+    model = models.alexnet(pretrained=True)
 
     #Freeze trained layers
     for param in model.parameters():
@@ -270,7 +270,7 @@ def get_sample(index):
     raw_image = np.array(raw_image)  # convert from PIL to numpy
     image_tensor = input_transform(raw_image)
     return raw_image, image_tensor, class_index
-    
+
 
 def sensitivity_analysis(model, image_tensor, target_class=None, postprocess='abs'):
     # image_tensor can be a pytorch tensor or anything that can be converted to a pytorch tensor (e.g. numpy, list)
