@@ -319,7 +319,7 @@ class CamExtractor():
             Does a forward pass on convolutions, hooks the function at given layer
         """
         conv_output = None
-        modules = = list(self.model.children())[:-1]
+        modules = list(self.model.children())[:-1]
         for module_pos, module in modules.items():
             x = module(x)  # Forward
             if int(module_pos) == self.target_layer:
