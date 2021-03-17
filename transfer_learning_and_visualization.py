@@ -486,7 +486,7 @@ if __name__ == '__main__':
                        target_layer_names=["2"], use_cuda=args.use_cuda)
 
     print(args.image_path)
-    img = cv2.imread(args.image_path, 1)
+    img = cv2.imread(traindir + "/NonDemented/nonDem0.jpg", 1)
     print(img)
     img = np.float32(img) / 255
     # Opencv loads as BGR:
