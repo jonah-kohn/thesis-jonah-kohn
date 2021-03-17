@@ -248,12 +248,12 @@ model, _ = train(
     dataloaders['val'],
     save_file_name=save_file_name,
     max_epochs_stop=5,
-    n_epochs=30
+    n_epochs=8
     )
 
 def get_sample(index):
     """Returns the raw image, the transformed image, and the class."""
-    raw_image, class_index = dataset[index]
+    raw_image, class_index = data["train"][index]
     raw_image = np.array(raw_image)  # convert from PIL to numpy
     image_tensor = input_transform(raw_image)
     return raw_image, image_tensor, class_index
@@ -333,7 +333,7 @@ for i, vertical_axes in enumerate(axes.T):
     plt.sca(vertical_axes[0])
     plt.axis('off')
     plt.imshow(image)
-    
+
     plt.sca(vertical_axes[1])
     plt.axis('off')
     plt.imshow(sensitivity_analysis(model, image_tensor, postprocess='abs').max(0), cmap='gray')
