@@ -61,16 +61,16 @@ n_classes = 4
 
 def get_pretrained_model():
 
-    model = models.vgg19(pretrained=True)
+    model = models.resnet50(pretrained=True)
 
     #Freeze trained layers
     for param in model.parameters():
         param.requires_grad = False
 
-    n_inputs = model.classifier[0].in_features
+    n_inputs = model.fc.in_features
 
     #Add to end of classifier
-    model.classifier = nn.Sequential(
+    model.fc = nn.Sequential(
         nn.Linear(n_inputs, 256),
         nn.ReLU(), nn.Dropout(0.2),
         nn.Linear(256, n_classes),
@@ -239,7 +239,7 @@ def train(model,
     return model, history
 
 # model = get_pretrained_model()
-
+print(model)
 model, _ = train(
     model,
     criterion,
@@ -248,7 +248,7 @@ model, _ = train(
     dataloaders['val'],
     save_file_name=save_file_name,
     max_epochs_stop=5,
-    n_epochs=4
+    n_epochs=1
     )
 
 # from lucent.optvis import render, param, transform
