@@ -253,7 +253,7 @@ model, _ = train(
 
 
 from lucent.optvis import render, param, transform
-
+device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 model.to(device).eval()
 obj = "layer2:9" # a ResNet50 layer and channel
 render.render_vis(model, obj)
