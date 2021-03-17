@@ -78,8 +78,8 @@ def get_pretrained_model():
         )
 
     #Check GPU availability
-    # if cuda.is_available():
-    model = model.to('cuda')
+    if cuda.is_available():
+        model = model.to('cuda')
 
     return model
 
@@ -251,108 +251,98 @@ model, _ = train(
     n_epochs=4
     )
 
-dataset = datasets.ImageFolder(validdir, transform=transforms.Compose([
-            transforms.Resize(256),
-            transforms.CenterCrop(224)
-        ]))
 
-image_means = np.array([0.485, 0.456, 0.406])
-image_stds = np.array([0.229, 0.224, 0.225])
+from lucent.optvis import render, param, transform
 
-input_transform = transforms.Compose([
-    transforms.ToTensor(),
-    transforms.Normalize(mean=image_means, std=image_stds)
-])
+model.to(device).eval()
+obj = "layer2:9" # a ResNet50 layer and channel
+render.render_vis(model, obj)
 
-def get_sample(index):
-    """Returns the raw image, the transformed image, and the class."""
-    raw_image, class_index = dataset[index]
-    raw_image = np.array(raw_image)  # convert from PIL to numpy
-    image_tensor = input_transform(raw_image)
-    return raw_image, image_tensor, class_index
-
-
-def sensitivity_analysis(model, image_tensor, target_class=None, postprocess='abs'):
-    # image_tensor can be a pytorch tensor or anything that can be converted to a pytorch tensor (e.g. numpy, list)
-
-    image_tensor = torch.Tensor(image_tensor)  # convert numpy or list to tensor
-    X = Variable(image_tensor[None], requires_grad=True)  # add dimension to simulate batch
-
-    model.eval()
-    output = model(X)
-    output_class = output.max(1)[1].data.numpy()[0]
-    print('Image was classified as:', output_class)
-
-    model.zero_grad()
-    one_hot_output = torch.zeros(output.size())
-    if target_class is None:
-        one_hot_output[0, output_class] = 1
-    else:
-        one_hot_output[0, target_class] = 1
-    output.backward(gradient=one_hot_output)
-
-    relevance_map = X.grad.data[0].numpy()
-
-    if postprocess == 'abs':  # as in Simonyan et al. (2013)
-        return np.abs(relevance_map)
-    elif postprocess == 'square':  # as in Montavon et al. (2018)
-        return relevance_map**2
-    elif postprocess is None:
-        return relevance_map
-    else:
-        raise ValueError()
-
-def guided_backprop(model, image_tensor, target_class=None, postprocess='abs'):
-
-    def relu_hook_function(module, grad_in, grad_out):
-        """
-        If there is a negative gradient, change it to zero.
-        """
-        if isinstance(module, nn.ReLU):
-            return (torch.clamp(grad_in[0], min=0.0),)
-
-    hook_handles = []
-
-    try:
-        # Loop through layers, hook up ReLUs with relu_hook_function, store handles to hooks.
-        for pos, module in model.features._modules.items():
-            if isinstance(module, nn.ReLU):
-                hook_handle = module.register_backward_hook(relu_hook_function)
-                hook_handles.append(hook_handle)
-
-        # Calculate backprop with modified ReLUs.
-        relevance_map = sensitivity_analysis(model, image_tensor, target_class=target_class, postprocess=postprocess)
-
-    finally:
-        # Remove hooks from model.
-        # The finally clause re-raises any possible exceptions.
-        for hook_handle in hook_handles:
-            hook_handle.remove()
-            del hook_handle
-
-    return relevance_map
-
-image, image_tensor, class_index = get_sample(0)
-map = guided_backprop(model, image_tensor, postprocess='abs')
-map = Image.fromarray(map)
-map.save(cwd + "backprop.jpeg")
-
-
-fig, axes = plt.subplots(2, 4, figsize=(15, 18))
-
-for i, vertical_axes in enumerate(axes.T):
-    image, image_tensor, class_index = get_sample(i)
-
-    plt.sca(vertical_axes[0])
-    plt.axis('off')
-    plt.imshow(image)
-
-    plt.sca(vertical_axes[1])
-    plt.axis('off')
-    plt.imshow(sensitivity_analysis(model, image_tensor, postprocess='abs').max(0), cmap='gray')
-
-    plt.sca(vertical_axes[2])
-    plt.axis('off')
-    plt.imshow(guided_backprop(model, image_tensor, postprocess='abs').max(0), cmap='gray')
-
-plt.savefig('comparison.png')
+#
+#
+# dataset = datasets.ImageFolder(validdir, transform=transforms.Compose([
+#             transforms.Resize(256),
+#             transforms.CenterCrop(224)
+#         ]))
+#
+# image_means = np.array([0.485, 0.456, 0.406])
+# image_stds = np.array([0.229, 0.224, 0.225])
+#
+# input_transform = transforms.Compose([
+#     transforms.ToTensor(),
+#     transforms.Normalize(mean=image_means, std=image_stds)
+# ])
+#
+# def get_sample(index):
+#     raw_image, class_index = dataset[index]
+#     raw_image = np.array(raw_image)
+#     image_tensor = input_transform(raw_image)
+#     return raw_image, image_tensor, class_index
+#
+#
+# def sensitivity_analysis(model, image_tensor, target_class=None):
+#
+#     image_tensor = torch.Tensor(image_tensor)
+#     X = Variable(image_tensor[None], requires_grad=True)  # add dimension to simulate batch
+#
+#     model.eval()
+#     output = model(X)
+#     output_class = output.max(1)[1].data.numpy()[0]
+#     print('Image was classified as:', output_class)
+#
+#     model.zero_grad()
+#     one_hot_output = torch.zeros(output.size())
+#     one_hot_output[0, target_class] = 1
+#
+#     output.backward(gradient=one_hot_output)
+#
+#     relevance_map = X.grad.data[0].numpy()
+#     return np.abs(relevance_map)
+#
+# def guided_backprop(model, image_tensor, target_class=None, postprocess='abs'):
+#
+#     def relu_hook_function(module, grad_in, grad_out):
+#         if isinstance(module, nn.ReLU):
+#             return (torch.clamp(grad_in[0], min=0.0),)
+#
+#     hook_handles = []
+#
+#     try:
+#         for pos, module in model.features._modules.items():
+#             if isinstance(module, nn.ReLU):
+#                 hook_handle = module.register_backward_hook(relu_hook_function)
+#                 hook_handles.append(hook_handle)
+#
+#         # Calculate backprop with modified ReLUs.
+#         relevance_map = sensitivity_analysis(model, image_tensor, target_class=target_class, postprocess=postprocess)
+#
+#     finally:
+#         for hook_handle in hook_handles:
+#             hook_handle.remove()
+#             del hook_handle
+#
+#     return relevance_map
+#
+# image, image_tensor, class_index = get_sample(0)
+# map = guided_backprop(model, image_tensor, postprocess='abs')
+# map = Image.fromarray(map)
+# map.save(cwd + "backprop.jpeg")
+#
+# fig, axes = plt.subplots(2, 4, figsize=(15, 18))
+#
+# for i, vertical_axes in enumerate(axes.T):
+#     image, image_tensor, class_index = get_sample(i)
+#
+#     plt.sca(vertical_axes[0])
+#     plt.axis('off')
+#     plt.imshow(image)
+#
+#     plt.sca(vertical_axes[1])
+#     plt.axis('off')
+#     plt.imshow(sensitivity_analysis(model, image_tensor, postprocess='abs').max(0), cmap='gray')
+#
+#     plt.sca(vertical_axes[2])
+#     plt.axis('off')
+#     plt.imshow(guided_backprop(model, image_tensor, postprocess='abs').max(0), cmap='gray')
+#
+# plt.savefig('comparison.png')
