@@ -450,7 +450,7 @@ class GuidedBackpropReLUModel:
 
 def get_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--use-cuda', action='store_true', default=False,
+    parser.add_argument('--use-cuda', action='store_true', default=True,
                         help='Use NVIDIA GPU acceleration')
     parser.add_argument('--image-path', type=str, default='./examples/both.png',
                         help='Input image path')
@@ -485,12 +485,9 @@ if __name__ == '__main__':
     grad_cam = GradCam(model=model, feature_module=model.layer4, \
                        target_layer_names=["2"], use_cuda=args.use_cuda)
 
-    print(args.image_path)
     img = cv2.imread(traindir + "/NonDemented/nonDem0.jpg", 1)
-    print(img)
     img = np.float32(img) / 255
     # Opencv loads as BGR:
-    print(img)
     img = img[:, :, ::-1]
     input_img = preprocess_image(img)
 
