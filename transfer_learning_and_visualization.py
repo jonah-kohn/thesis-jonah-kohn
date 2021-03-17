@@ -62,15 +62,16 @@ n_classes = 4
 def get_pretrained_model():
 
     model = models.vgg16_bn(pretrained=True)
+    print(model)
 
     #Freeze trained layers
     for param in model.parameters():
         param.requires_grad = False
 
-    n_inputs = model.fc.in_features
+    n_inputs = model.classifier[0].in_features
 
     #Add to end of classifier
-    model.fc = nn.Sequential(
+    model.classifier = nn.Sequential(
         nn.Linear(n_inputs, 256),
         nn.ReLU(), nn.Dropout(0.2),
         nn.Linear(256, n_classes),
