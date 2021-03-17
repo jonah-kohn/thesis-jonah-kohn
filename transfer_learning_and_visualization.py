@@ -488,7 +488,7 @@ if __name__ == '__main__':
     img = cv2.imread(args.image_path, 1)
     img = np.float32(img) / 255
     # Opencv loads as BGR:
-    img = img[:, :, ::-1]
+    # img = img[:, :, ::-1]
     input_img = preprocess_image(img)
 
     # If None, returns the map for the highest scoring category.
