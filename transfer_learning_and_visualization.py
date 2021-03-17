@@ -223,6 +223,8 @@ def train(model,
                                 'train_loss', 'valid_loss', 'train_acc',
                                 'valid_acc'
                             ])
+                        for param in model.parameters():
+                            param.requires_grad = True
                         return model, history
 
     # Attach the optimizer
