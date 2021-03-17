@@ -61,7 +61,7 @@ n_classes = 4
 
 def get_pretrained_model():
 
-    model = models.alexnet(pretrained=True)
+    model = models.vgg16(pretrained=True)
 
     #Freeze trained layers
     for param in model.parameters():
