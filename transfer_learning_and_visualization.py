@@ -251,13 +251,26 @@ model, _ = train(
     n_epochs=4
     )
 
+dataset = datasets.ImageFolder(validdir, transform=transforms.Compose([
+            transforms.Resize(256),
+            transforms.CenterCrop(224)
+        ]))
+
+image_means = np.array([0.485, 0.456, 0.406])
+image_stds = np.array([0.229, 0.224, 0.225])
+
+input_transform = transforms.Compose([
+    transforms.ToTensor(),
+    transforms.Normalize(mean=image_means, std=image_stds)
+])
+
 def get_sample(index):
     """Returns the raw image, the transformed image, and the class."""
-    raw_image, class_index = data["train"][index]
+    raw_image, class_index = dataset[index]
     raw_image = np.array(raw_image)  # convert from PIL to numpy
-    image_tensor = image_transform(raw_image)
+    image_tensor = input_transform(raw_image)
     return raw_image, image_tensor, class_index
-
+    
 
 def sensitivity_analysis(model, image_tensor, target_class=None, postprocess='abs'):
     # image_tensor can be a pytorch tensor or anything that can be converted to a pytorch tensor (e.g. numpy, list)
