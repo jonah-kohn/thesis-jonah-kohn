@@ -268,9 +268,7 @@ def get_example_params(example_index):
     file_name_to_export = img_path[img_path.rfind('/')+1:img_path.rfind('.')]
     # Read image
     original_image = Image.open(img_path).convert('RGB')
-    # Process image
-    prep_img = preprocess_image(original_image)
-    # Define model
+
     pretrained_model = model
     return (original_image,
             prep_img,
