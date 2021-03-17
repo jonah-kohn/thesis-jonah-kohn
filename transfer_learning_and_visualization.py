@@ -61,7 +61,7 @@ n_classes = 4
 
 def get_pretrained_model():
 
-    model = models.vgg16_bn(pretrained=True)
+    model = models.vgg19(pretrained=True)
 
     #Freeze trained layers
     for param in model.parameters():
@@ -255,7 +255,7 @@ model, _ = train(
 from lucent.optvis import render, param, transform
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 model.to(device).eval()
-obj = "layer2:9" # a ResNet50 layer and channel
+obj = "conv4_1:9"
 render.render_vis(model, obj)
 
 #
