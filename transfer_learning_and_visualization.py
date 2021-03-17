@@ -31,8 +31,8 @@ batch_size = 128
 image_transform = transforms.Compose([
         transforms.Resize(size=256),
         transforms.CenterCrop(size=224),
-        transforms.RandomHorizontalFlip(p=0.5),
-        transforms.RandomVerticalFlip(p=0.5),
+        # transforms.RandomHorizontalFlip(p=0.5),
+        # transforms.RandomVerticalFlip(p=0.5),
         transforms.ToTensor(),
         transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
 
@@ -248,14 +248,14 @@ model, _ = train(
     dataloaders['val'],
     save_file_name=save_file_name,
     max_epochs_stop=5,
-    n_epochs=8
+    n_epochs=4
     )
 
 def get_sample(index):
     """Returns the raw image, the transformed image, and the class."""
     raw_image, class_index = data["train"][index]
     raw_image = np.array(raw_image)  # convert from PIL to numpy
-    image_tensor = input_transform(raw_image)
+    image_tensor = image_transform(raw_image)
     return raw_image, image_tensor, class_index
 
 
