@@ -159,7 +159,7 @@ def train(model,
             train_acc += accuracy.item() * data.size(0)
 
             #Print format taken from pytorch website
-            print(f'Epoch: {epoch}\t{100 * (ii + 1) / len(train_loader):.2f}% complete.', end='\r')
+            # print(f'Epoch: {epoch}\t{100 * (ii + 1) / len(train_loader):.2f}% complete.', end='\r')
 
         #Val!
         else:
