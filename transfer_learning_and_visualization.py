@@ -308,12 +308,22 @@ default_cmap = LinearSegmentedColormap.from_list('custom blue',
                                                   (0.25, '#000000'),
                                                   (1, '#000000')], N=256)
 
-vis_img = viz.visualize_image_attr(np.transpose(attributions_ig.squeeze().cpu().detach().numpy(), (1,2,0)),
-                             np.transpose(transformed_img.squeeze().cpu().detach().numpy(), (1,2,0)),
-                             method='heat_map',
-                             cmap=default_cmap,
-                             show_colorbar=True,
-                             sign='positive',
-                             outlier_perc=1)
+# vis_img = viz.visualize_image_attr(np.transpose(attributions_ig.squeeze().cpu().detach().numpy(), (1,2,0)),
+#                              np.transpose(transformed_img.squeeze().cpu().detach().numpy(), (1,2,0)),
+#                              method='heat_map',
+#                              cmap=default_cmap,
+#                              show_colorbar=True,
+#                              sign='positive',
+#                              outlier_perc=1)
 
+noise_tunnel = NoiseTunnel(integrated_gradients)
+
+attributions_ig_nt = noise_tunnel.attribute(input, nt_samples=10, nt_type='smoothgrad_sq', target=pred_label_idx)
+
+_ = viz.visualize_image_attr_multiple(np.transpose(attributions_ig_nt.squeeze().cpu().detach().numpy(), (1,2,0)),
+                                      np.transpose(transformed_img.squeeze().cpu().detach().numpy(), (1,2,0)),
+                                      ["original_image", "heat_map"],
+                                      ["all", "positive"],
+                                      cmap=default_cmap,
+                                      show_colorbar=True)
 plt.savefig("test.png")
