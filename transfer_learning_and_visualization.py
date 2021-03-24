@@ -87,7 +87,7 @@ def get_pretrained_model():
 
     #Check GPU availability
     if cuda.is_available():
-        model = model.to('cuda')
+        model = model.to('cuda:1')
 
     return model
 
