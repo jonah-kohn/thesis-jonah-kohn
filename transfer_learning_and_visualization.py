@@ -318,7 +318,7 @@ default_cmap = LinearSegmentedColormap.from_list('custom blue',
 
 noise_tunnel = NoiseTunnel(integrated_gradients)
 
-attributions_ig_nt = noise_tunnel.attribute(input, nt_samples=10, nt_type='smoothgrad_sq', target=pred_label_idx)
+attributions_ig_nt = noise_tunnel.attribute(input, nt_samples=10, nt_type='smoothgrad_sq', target=pred_label_idx, internal_batch_size=1)
 
 _ = viz.visualize_image_attr_multiple(np.transpose(attributions_ig_nt.squeeze().cpu().detach().numpy(), (1,2,0)),
                                       np.transpose(transformed_img.squeeze().cpu().detach().numpy(), (1,2,0)),
