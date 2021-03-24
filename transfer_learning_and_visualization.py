@@ -25,6 +25,8 @@ from captum.attr import Occlusion
 from captum.attr import NoiseTunnel
 from captum.attr import visualization as viz
 
+gpu = "cuda:2"
+
 cwd = os.getcwd()
 datadir = cwd + "/alzheimers_binary/"
 traindir = datadir + 'train/'
@@ -139,7 +141,7 @@ def train(model,
         for ii, (data, target) in enumerate(train_loader):
 
             if cuda.is_available():
-                data, target = data.to("cuda:1"), target.to("cuda:1")
+                data, target = data.to(gpu), target.to(gpu)
 
             optimizer.zero_grad()
             output = model(data)
@@ -169,7 +171,7 @@ def train(model,
                 for data, target in valid_loader:
 
                     if cuda.is_available():
-                        data, target = data.to("cuda:1"), target.to("cuda:1")
+                        data, target = data.to(gpu), target.to(gpu)
 
                     output = model(data)
 
@@ -290,7 +292,7 @@ print(transformed_img.shape)
 transformed_img = torch.cat([transformed_img, transformed_img, transformed_img], dim=0)
 input = transform_normalize(transformed_img)
 input = input.unsqueeze(0)
-input = input.to("cuda:1")
+input = input.to(gpu)
 
 output = model(input)
 output = F.softmax(output, dim=1)
