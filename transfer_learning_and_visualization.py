@@ -272,14 +272,22 @@ transform = transforms.Compose([
  transforms.ToTensor()
 ])
 
+# transform_normalize = transforms.Normalize(
+#      mean=[0.485],
+#      std=[0.229]
+#  )
+
 transform_normalize = transforms.Normalize(
-     mean=[0.485],
-     std=[0.229]
+     mean=[0.485, 0.456, 0.406],
+     std=[0.229, 0.224, 0.225]
  )
+
 
 img = Image.open('alzheimers_binary/train/ModerateDemented/mildDem0.jpg')
 
 transformed_img = transform(img)
+
+torch.cat(img, img, img, dim=2)
 
 input = transform_normalize(transformed_img)
 input = input.unsqueeze(0)
