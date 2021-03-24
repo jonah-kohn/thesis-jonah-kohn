@@ -301,7 +301,7 @@ prediction_score, pred_label_idx = torch.topk(output, 1)
 pred_label_idx.squeeze_()
 
 integrated_gradients = IntegratedGradients(model)
-attributions_ig = integrated_gradients.attribute(input, target=pred_label_idx, n_steps=200)
+attributions_ig = integrated_gradients.attribute(input, target=pred_label_idx, n_steps=200, internal_batch_size=1)
 
 default_cmap = LinearSegmentedColormap.from_list('custom blue',
                                                  [(0, '#ffffff'),
