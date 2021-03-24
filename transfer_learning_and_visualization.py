@@ -288,7 +288,6 @@ transform_normalize = transforms.Normalize(
 img = Image.open('alzheimers_binary/train/ModerateDemented/mildDem0.jpg')
 
 transformed_img = transform(img)
-print(transformed_img.shape)
 transformed_img = torch.cat([transformed_img, transformed_img, transformed_img], dim=0)
 input = transform_normalize(transformed_img)
 input = input.unsqueeze(0)
