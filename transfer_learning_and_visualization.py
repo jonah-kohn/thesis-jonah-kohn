@@ -316,4 +316,4 @@ vis_img = viz.visualize_image_attr(np.transpose(attributions_ig.squeeze().cpu().
                              sign='positive',
                              outlier_perc=1)
 
-vis.img.save("attr_img.jpg")
+vis_img.save("attr_img.jpg")
