@@ -139,7 +139,7 @@ def train(model,
         for ii, (data, target) in enumerate(train_loader):
 
             if cuda.is_available():
-                data, target = data.cuda(), target.cuda()
+                data, target = data.to("cuda:1"), target.to("cuda:1")
 
             optimizer.zero_grad()
             output = model(data)
@@ -169,7 +169,7 @@ def train(model,
                 for data, target in valid_loader:
 
                     if cuda.is_available():
-                        data, target = data.cuda(), target.cuda()
+                        data, target = data.to("cuda:1"), target.to("cuda:1")
 
                     output = model(data)
 
