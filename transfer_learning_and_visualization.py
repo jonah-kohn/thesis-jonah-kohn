@@ -290,7 +290,7 @@ print(transformed_img.shape)
 transformed_img = torch.cat([transformed_img, transformed_img, transformed_img], dim=0)
 input = transform_normalize(transformed_img)
 input = input.unsqueeze(0)
-input = input.to("cuda:0")
+input = input.to("cuda:1")
 
 output = model(input)
 output = F.softmax(output, dim=1)
