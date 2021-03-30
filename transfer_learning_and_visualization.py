@@ -106,7 +106,7 @@ def get_pretrained_model():
 #Mapping stages to classes for reference
 
 model = get_pretrained_model()
-print(model)
+# print(model)
 
 model.class_to_idx = data['train'].class_to_idx
 model.idx_to_class = {
@@ -278,7 +278,7 @@ from lucent.optvis import render, param, transform, objectives
 @objectives.wrap_objective()
 def weight_vector(layer, weight, batch=None):
     """Visualize a single channel"""
-    @handle_batch(batch)
+    @objectives.handle_batch(batch)
     def inner(model):
         return -torch.matmul(model(layer), weight).mean()
     return inner
@@ -287,8 +287,6 @@ device = torch.device(gpu if torch.cuda.is_available() else "cpu")
 model.to(device).eval()
 obj = weight_vector(model.classifier[0], model.classifier[0].weight)
 render.render_vis(model, obj)
-
-
 
 
 # transform = transforms.Compose([
