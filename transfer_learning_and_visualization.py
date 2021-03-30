@@ -276,7 +276,7 @@ model, _ = train(
 from lucent.optvis import render, param, transform, objectives
 
 @objectives.wrap_objective()
-def weight_vector(layer, weight, batch=None):
+def weight_vector(layer, batch=None):
     """Visualize a single channel"""
     @objectives.handle_batch(batch)
     def inner(model):
@@ -285,7 +285,7 @@ def weight_vector(layer, weight, batch=None):
 
 device = torch.device(gpu if torch.cuda.is_available() else "cpu")
 model.to(device).eval()
-obj = weight_vector("classifier", "classifier"[0].weight)
+obj = weight_vector("classifier")
 render.render_vis(model, obj)
 
 
