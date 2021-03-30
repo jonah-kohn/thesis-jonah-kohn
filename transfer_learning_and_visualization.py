@@ -275,7 +275,7 @@ model, _ = train(
 
 from lucent.optvis import render, param, transform, objectives
 
-@wrap_objective()
+@objectives.wrap_objective()
 def weight_vector(layer, weight, batch=None):
     """Visualize a single channel"""
     @handle_batch(batch)
