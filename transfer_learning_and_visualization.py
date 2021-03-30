@@ -18,12 +18,12 @@ from PIL import Image
 
 import matplotlib.pyplot as plt
 from matplotlib.colors import LinearSegmentedColormap
-
-from captum.attr import IntegratedGradients
-from captum.attr import GradientShap
-from captum.attr import Occlusion
-from captum.attr import NoiseTunnel
-from captum.attr import visualization as viz
+#
+# from captum.attr import IntegratedGradients
+# from captum.attr import GradientShap
+# from captum.attr import Occlusion
+# from captum.attr import NoiseTunnel
+# from captum.attr import visualization as viz
 
 gpu = "cuda:2"
 
@@ -87,25 +87,26 @@ def get_pretrained_model():
     #     nn.LogSoftmax(dim=1)
     #     )
 
-    n_inputs = model.classifier.in_features
+    n_inputs = model.classifier[6].in_features
 
-    #Add to end of classifier
-    model.classifier = nn.Sequential(
+    #Add to end of classifier for vgg model
+    model.classifier[6] = nn.Sequential(
         nn.Linear(n_inputs, 256),
         nn.ReLU(), nn.Dropout(0.2),
         nn.Linear(256, n_classes),
         nn.LogSoftmax(dim=1)
         )
 
+
     #Check GPU availability
     if cuda.is_available():
         model = model.to(gpu)
 
     return model
-
 #Mapping stages to classes for reference
 
 model = get_pretrained_model()
+print(model)
 
 model.class_to_idx = data['train'].class_to_idx
 model.idx_to_class = {
@@ -285,7 +286,7 @@ def weight_vector(layer, weight, batch=None):
 
 device = torch.device(gpu if torch.cuda.is_available() else "cpu")
 model.to(device).eval()
-obj = weight_vector("avgpool", model.layer[32].weight)
+obj = weight_vector(model.classifier[0], model.classifier[0].weight)
 render.render_vis(model, obj)
 
 
