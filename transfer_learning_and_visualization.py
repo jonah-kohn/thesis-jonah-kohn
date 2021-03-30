@@ -280,7 +280,7 @@ def weight_vector(layer, batch=None):
     """Visualize a single channel"""
     @objectives.handle_batch(batch)
     def inner(model):
-        return -torch.matmul(model(layer), model(layer)[0].weight).mean()
+        return -torch.matmul(model(layer), model.layer[0].weight).mean()
     return inner
 
 device = torch.device(gpu if torch.cuda.is_available() else "cpu")
