@@ -71,7 +71,7 @@ n_classes = 4
 
 def get_pretrained_model():
 
-    model = models.vgg16(pretrained=True)
+    model = models.vgg19(pretrained=True)
 
     #Freeze trained layers
     for param in model.parameters():
@@ -280,7 +280,7 @@ def weight_vector(layer, batch=None):
     """Visualize a single channel"""
     @objectives.handle_batch(batch)
     def inner(model):
-        return -torch.matmul(model(layer), model.layer[0].weight).mean()
+        return -torch.matmul(model(layer), model[layer].weight.data).mean()
     return inner
 
 device = torch.device(gpu if torch.cuda.is_available() else "cpu")
