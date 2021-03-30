@@ -25,7 +25,7 @@ from matplotlib.colors import LinearSegmentedColormap
 # from captum.attr import NoiseTunnel
 # from captum.attr import visualization as viz
 
-gpu = "cuda:2"
+gpu = "cuda:0"
 
 cwd = os.getcwd()
 datadir = cwd + "/alzheimers_binary/"
@@ -280,12 +280,12 @@ def weight_vector(layer, weight, batch=None):
     """Visualize a single channel"""
     @objectives.handle_batch(batch)
     def inner(model):
-        return -torch.matmul(model(layer), weight).mean()
+        return -torch.matmul(model(layer), model(layer)[0].weight).mean()
     return inner
 
 device = torch.device(gpu if torch.cuda.is_available() else "cpu")
 model.to(device).eval()
-obj = weight_vector(model.classifier[0], model.classifier[0].weight)
+obj = weight_vector("classifier", "classifier"[0].weight)
 render.render_vis(model, obj)
 
 
