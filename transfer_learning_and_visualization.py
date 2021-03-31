@@ -276,13 +276,13 @@ model, _ = train(
 from lucent.optvis import render, param, transform, objectives
 
 @objectives.wrap_objective()
-def weight_vector(layer, weight,batch=None):
+def weight_vector(layer, weight, batch=None):
     @objectives.handle_batch(batch)
     def inner(model):
         return -torch.matmul(model(layer), weight).mean()
     return inner
 
-print(model("classifier"))
+print(model.classifier[0])
 device = torch.device(gpu if torch.cuda.is_available() else "cpu")
 model.to(device).eval()
 obj = weight_vector("classifier", model.classifier[0].weight)
