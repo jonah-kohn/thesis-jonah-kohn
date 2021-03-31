@@ -71,7 +71,7 @@ n_classes = 4
 
 def get_pretrained_model():
 
-    model = models.vgg19(pretrained=True)
+    model = models.vgg16(pretrained=True)
 
     #Freeze trained layers
     for param in model.parameters():
@@ -301,46 +301,46 @@ transform_normalize = transforms.Normalize(
      std=[0.229, 0.224, 0.225]
  )
 
+for i in range(10):
+    img = Image.open('alzheimers_binary/train/ModerateDemented/mildDem' + str(i) + '.jpg')
 
-img = Image.open('alzheimers_binary/train/ModerateDemented/mildDem0.jpg')
+    transformed_img = transform(img)
+    transformed_img = torch.cat([transformed_img, transformed_img, transformed_img], dim=0)
+    input = transform_normalize(transformed_img)
+    input = input.unsqueeze(0)
+    input = input.to(gpu)
 
-transformed_img = transform(img)
-transformed_img = torch.cat([transformed_img, transformed_img, transformed_img], dim=0)
-input = transform_normalize(transformed_img)
-input = input.unsqueeze(0)
-input = input.to(gpu)
+    output = model(input)
+    output = F.softmax(output, dim=1)
+    prediction_score, pred_label_idx = torch.topk(output, 1)
 
-output = model(input)
-output = F.softmax(output, dim=1)
-prediction_score, pred_label_idx = torch.topk(output, 1)
+    pred_label_idx.squeeze_()
 
-pred_label_idx.squeeze_()
+    integrated_gradients = IntegratedGradients(model)
+    attributions_ig = integrated_gradients.attribute(input, target=pred_label_idx, n_steps=200, internal_batch_size=1)
 
-integrated_gradients = IntegratedGradients(model)
-attributions_ig = integrated_gradients.attribute(input, target=pred_label_idx, n_steps=200, internal_batch_size=1)
+    default_cmap = LinearSegmentedColormap.from_list('custom blue',
+                                                     [(0, '#ffffff'),
+                                                      (0.25, '#000000'),
+                                                      (1, '#000000')], N=256)
 
-default_cmap = LinearSegmentedColormap.from_list('custom blue',
-                                                 [(0, '#ffffff'),
-                                                  (0.25, '#000000'),
-                                                  (1, '#000000')], N=256)
-
-vis_img = viz.visualize_image_attr(np.transpose(attributions_ig.squeeze().cpu().detach().numpy(), (1,2,0)),
-                             np.transpose(transformed_img.squeeze().cpu().detach().numpy(), (1,2,0)),
-                             method='heat_map',
-                             cmap=default_cmap,
-                             show_colorbar=True,
-                             sign='positive',
-                             outlier_perc=1)
+    vis_img = viz.visualize_image_attr(np.transpose(attributions_ig.squeeze().cpu().detach().numpy(), (1,2,0)),
+                                 np.transpose(transformed_img.squeeze().cpu().detach().numpy(), (1,2,0)),
+                                 method='heat_map',
+                                 cmap=default_cmap,
+                                 show_colorbar=True,
+                                 sign='positive',
+                                 outlier_perc=1)
 
 
-noise_tunnel = NoiseTunnel(integrated_gradients)
+    noise_tunnel = NoiseTunnel(integrated_gradients)
 
-attributions_ig_nt = noise_tunnel.attribute(input, nt_samples=10, nt_type='smoothgrad_sq', target=pred_label_idx, internal_batch_size=10)
+    attributions_ig_nt = noise_tunnel.attribute(input, nt_samples=10, nt_type='smoothgrad_sq', target=pred_label_idx, internal_batch_size=10)
 
-_ = viz.visualize_image_attr_multiple(np.transpose(attributions_ig_nt.squeeze().cpu().detach().numpy(), (1,2,0)),
-                                      np.transpose(transformed_img.squeeze().cpu().detach().numpy(), (1,2,0)),
-                                      ["original_image", "heat_map"],
-                                      ["all", "positive"],
-                                      cmap=default_cmap,
-                                      show_colorbar=True)
-plt.savefig("test.png")
+    _ = viz.visualize_image_attr_multiple(np.transpose(attributions_ig_nt.squeeze().cpu().detach().numpy(), (1,2,0)),
+                                          np.transpose(transformed_img.squeeze().cpu().detach().numpy(), (1,2,0)),
+                                          ["original_image", "heat_map"],
+                                          ["all", "positive"],
+                                          cmap=default_cmap,
+                                          show_colorbar=True)
+    plt.savefig(str(i)+".png")
