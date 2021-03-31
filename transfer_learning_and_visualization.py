@@ -106,7 +106,7 @@ def get_pretrained_model():
 #Mapping stages to classes for reference
 
 model = get_pretrained_model()
-# print(model)
+print(model)
 
 model.class_to_idx = data['train'].class_to_idx
 model.idx_to_class = {
@@ -273,74 +273,74 @@ model, _ = train(
     n_epochs=30
     )
 
-# from lucent.optvis import render, param, transform, objectives
+from lucent.optvis import render, param, transform, objectives
+
+@objectives.wrap_objective()
+def weight_vector(layer, weight,batch=None):
+    """Visualize a single channel"""
+    @objectives.handle_batch(batch)
+    def inner(model):
+        return -torch.matmul(model(layer), weight).mean()
+    return inner
+
+device = torch.device(gpu if torch.cuda.is_available() else "cpu")
+model.to(device).eval()
+obj = weight_vector("classifier", model.)
+render.render_vis(model, obj)
+
 #
-# @objectives.wrap_objective()
-# def weight_vector(layer, batch=None):
-#     """Visualize a single channel"""
-#     @objectives.handle_batch(batch)
-#     def inner(model):
-#         return -torch.matmul(model(layer), model[layer].weight.data).mean()
-#     return inner
+# transform = transforms.Compose([
+#  transforms.Resize(256),
+#  transforms.CenterCrop(224),
+#  transforms.ToTensor()
+# ])
 #
-# device = torch.device(gpu if torch.cuda.is_available() else "cpu")
-# model.to(device).eval()
-# obj = weight_vector("classifier")
-# render.render_vis(model, obj)
-
-
-transform = transforms.Compose([
- transforms.Resize(256),
- transforms.CenterCrop(224),
- transforms.ToTensor()
-])
-
-
-transform_normalize = transforms.Normalize(
-     mean=[0.485, 0.456, 0.406],
-     std=[0.229, 0.224, 0.225]
- )
-
-for i in range(10):
-    img = Image.open('alzheimers_binary/train/ModerateDemented/mildDem' + str(i) + '.jpg')
-
-    transformed_img = transform(img)
-    transformed_img = torch.cat([transformed_img, transformed_img, transformed_img], dim=0)
-    input = transform_normalize(transformed_img)
-    input = input.unsqueeze(0)
-    input = input.to(gpu)
-
-    output = model(input)
-    output = F.softmax(output, dim=1)
-    prediction_score, pred_label_idx = torch.topk(output, 1)
-
-    pred_label_idx.squeeze_()
-
-    integrated_gradients = IntegratedGradients(model)
-    attributions_ig = integrated_gradients.attribute(input, target=pred_label_idx, n_steps=200, internal_batch_size=1)
-
-    default_cmap = LinearSegmentedColormap.from_list('custom blue',
-                                                     [(0, '#ffffff'),
-                                                      (0.25, '#000000'),
-                                                      (1, '#000000')], N=256)
-
-    vis_img = viz.visualize_image_attr(np.transpose(attributions_ig.squeeze().cpu().detach().numpy(), (1,2,0)),
-                                 np.transpose(transformed_img.squeeze().cpu().detach().numpy(), (1,2,0)),
-                                 method='heat_map',
-                                 cmap=default_cmap,
-                                 show_colorbar=True,
-                                 sign='positive',
-                                 outlier_perc=1)
-
-
-    noise_tunnel = NoiseTunnel(integrated_gradients)
-
-    attributions_ig_nt = noise_tunnel.attribute(input, nt_samples=10, nt_type='smoothgrad_sq', target=pred_label_idx, internal_batch_size=10)
-
-    _ = viz.visualize_image_attr_multiple(np.transpose(attributions_ig_nt.squeeze().cpu().detach().numpy(), (1,2,0)),
-                                          np.transpose(transformed_img.squeeze().cpu().detach().numpy(), (1,2,0)),
-                                          ["original_image", "heat_map"],
-                                          ["all", "positive"],
-                                          cmap=default_cmap,
-                                          show_colorbar=True)
-    plt.savefig(str(i)+".png")
+#
+# transform_normalize = transforms.Normalize(
+#      mean=[0.485, 0.456, 0.406],
+#      std=[0.229, 0.224, 0.225]
+#  )
+#
+# for i in range(10):
+#     img = Image.open('alzheimers_binary/train/ModerateDemented/mildDem' + str(i) + '.jpg')
+#
+#     transformed_img = transform(img)
+#     transformed_img = torch.cat([transformed_img, transformed_img, transformed_img], dim=0)
+#     input = transform_normalize(transformed_img)
+#     input = input.unsqueeze(0)
+#     input = input.to(gpu)
+#
+#     output = model(input)
+#     output = F.softmax(output, dim=1)
+#     prediction_score, pred_label_idx = torch.topk(output, 1)
+#
+#     pred_label_idx.squeeze_()
+#
+#     integrated_gradients = IntegratedGradients(model)
+#     attributions_ig = integrated_gradients.attribute(input, target=pred_label_idx, n_steps=200, internal_batch_size=1)
+#
+#     default_cmap = LinearSegmentedColormap.from_list('custom blue',
+#                                                      [(0, '#ffffff'),
+#                                                       (0.25, '#000000'),
+#                                                       (1, '#000000')], N=256)
+#
+#     vis_img = viz.visualize_image_attr(np.transpose(attributions_ig.squeeze().cpu().detach().numpy(), (1,2,0)),
+#                                  np.transpose(transformed_img.squeeze().cpu().detach().numpy(), (1,2,0)),
+#                                  method='heat_map',
+#                                  cmap=default_cmap,
+#                                  show_colorbar=True,
+#                                  sign='positive',
+#                                  outlier_perc=1)
+#
+#
+#     noise_tunnel = NoiseTunnel(integrated_gradients)
+#
+#     attributions_ig_nt = noise_tunnel.attribute(input, nt_samples=10, nt_type='smoothgrad_sq', target=pred_label_idx, internal_batch_size=10)
+#
+#     _ = viz.visualize_image_attr_multiple(np.transpose(attributions_ig_nt.squeeze().cpu().detach().numpy(), (1,2,0)),
+#                                           np.transpose(transformed_img.squeeze().cpu().detach().numpy(), (1,2,0)),
+#                                           ["original_image", "heat_map"],
+#                                           ["all", "positive"],
+#                                           cmap=default_cmap,
+#                                           show_colorbar=True)
+#     plt.savefig(str(i)+".png")
