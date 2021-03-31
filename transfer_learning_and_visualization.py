@@ -71,7 +71,7 @@ n_classes = 2
 
 def get_pretrained_model():
 
-    model = models.vgg16(pretrained=True)
+    model = models.vgg19(pretrained=True)
 
     #Freeze trained layers
     for param in model.parameters():
@@ -285,7 +285,7 @@ def weight_vector(layer, weight,batch=None):
 
 device = torch.device(gpu if torch.cuda.is_available() else "cpu")
 model.to(device).eval()
-obj = weight_vector("classifier", model)
+obj = weight_vector("classifier", model.classifier.0.weight)
 render.render_vis(model, obj)
 
 #
