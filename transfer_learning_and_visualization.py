@@ -270,7 +270,7 @@ model, _ = train(
     dataloaders['val'],
     save_file_name=save_file_name,
     max_epochs_stop=5,
-    n_epochs=30
+    n_epochs=1
     )
 
 from lucent.optvis import render, param, transform, objectives
