@@ -279,7 +279,10 @@ from lucent.optvis import render, param, transform, objectives
 def weight_vector(layer, weight, batch=None):
     @objectives.handle_batch(batch)
     def inner(model):
-        return -torch.matmul(model(layer), weight).mean()
+        layer = model(layer)
+        print(layer.shape)
+        print(weight.shape)
+        return -torch.matmul(layer, weight).mean()
     return inner
 
 print(model.classifier[0].weight.shape)
