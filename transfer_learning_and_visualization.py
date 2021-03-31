@@ -280,13 +280,15 @@ def weight_vector(layer, weight, batch=None):
     @objectives.handle_batch(batch)
     def inner(model):
         current_layer = model(layer)
-        print(current_layer)
+        
         print(current_layer.shape)
+        current_layer = current_layer.view(1, -1, 1, 1)
+        print(current_layer.shape)
+
         print(weight.shape)
         return -torch.matmul(current_layer, weight).mean()
     return inner
 
-print(model.classifier[0].weight.shape)
 device = torch.device(gpu if torch.cuda.is_available() else "cpu")
 model.to(device).eval()
 obj = weight_vector("avgpool", model.classifier[0].weight)
