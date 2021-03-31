@@ -67,7 +67,7 @@ dataloaders = {
 trainiter = iter(dataloaders['train'])
 features, labels = next(trainiter)
 features.shape, labels.shape
-n_classes = 4
+n_classes = 2
 
 def get_pretrained_model():
 
