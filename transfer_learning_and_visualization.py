@@ -280,6 +280,7 @@ def weight_vector(layer, weight, batch=None):
     @objectives.handle_batch(batch)
     def inner(model):
         current_layer = model(layer)
+        print(current_layer)
         print(current_layer.shape)
         print(weight.shape)
         return -torch.matmul(current_layer, weight).mean()
