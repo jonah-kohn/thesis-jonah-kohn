@@ -18,12 +18,12 @@ from PIL import Image
 
 import matplotlib.pyplot as plt
 from matplotlib.colors import LinearSegmentedColormap
-#
-# from captum.attr import IntegratedGradients
-# from captum.attr import GradientShap
-# from captum.attr import Occlusion
-# from captum.attr import NoiseTunnel
-# from captum.attr import visualization as viz
+
+from captum.attr import IntegratedGradients
+from captum.attr import GradientShap
+from captum.attr import Occlusion
+from captum.attr import NoiseTunnel
+from captum.attr import visualization as viz
 
 gpu = "cuda:0"
 
@@ -41,8 +41,8 @@ batch_size = 128
 image_transform = transforms.Compose([
         transforms.Resize(size=256),
         transforms.CenterCrop(size=224),
-        # transforms.RandomHorizontalFlip(p=0.5),
-        # transforms.RandomVerticalFlip(p=0.5),
+        transforms.RandomHorizontalFlip(p=0.5),
+        transforms.RandomVerticalFlip(p=0.5),
         transforms.ToTensor(),
         transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
 
