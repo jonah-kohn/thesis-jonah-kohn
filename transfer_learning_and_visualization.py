@@ -285,7 +285,7 @@ def weight_vector(layer, weight,batch=None):
 
 device = torch.device(gpu if torch.cuda.is_available() else "cpu")
 model.to(device).eval()
-obj = weight_vector("classifier", model.)
+obj = weight_vector("classifier", model)
 render.render_vis(model, obj)
 
 #
