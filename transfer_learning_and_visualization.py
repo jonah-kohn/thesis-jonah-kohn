@@ -292,7 +292,7 @@ def weight_vector(layer, weight, batch=None):
 device = torch.device(gpu if torch.cuda.is_available() else "cpu")
 model.to(device).eval()
 obj = weight_vector("avgpool", model.classifier[0].weight)
-render.render_vis(model, obj, show_image = False, save_image = True)
+render.render_vis(model, obj, show_image = False, save_image = True, image_name = "lucent1")
 
 #
 # transform = transforms.Compose([
