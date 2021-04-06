@@ -25,7 +25,7 @@ from captum.attr import Occlusion
 from captum.attr import NoiseTunnel
 from captum.attr import visualization as viz
 
-gpu = "cuda:2"
+gpu = "cuda:0"
 
 cwd = os.getcwd()
 datadir = cwd + "/alzheimers_binary/"
@@ -291,6 +291,7 @@ render.render_vis(model,
                   save_image=True,
                   image_name="lucentweight.png")
 
+model.to(device).eval()
 obj = "classifier"
 render.render_vis(model,
                   obj,
