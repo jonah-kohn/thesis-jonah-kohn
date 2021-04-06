@@ -75,7 +75,7 @@ def get_pretrained_model():
 
     #Freeze trained layers
     for param in model.parameters():
-        # param.requires_grad = False
+        param.requires_grad = False
 
     # n_inputs = model.fc.in_features
     #
