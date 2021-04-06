@@ -126,7 +126,7 @@ def train(model,
           train_loader,
           valid_loader,
           save_file_name,
-          max_epochs_stop=3,
+          max_epochs_stop=20,
           n_epochs=20,
           print_every=2):
 
