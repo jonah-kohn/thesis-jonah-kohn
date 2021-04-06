@@ -74,8 +74,8 @@ def get_pretrained_model():
     model = models.vgg19(pretrained=True)
 
     #Freeze trained layers
-    for param in model.parameters():
-        param.requires_grad = False
+    # for param in model.parameters():
+    #     # param.requires_grad = False
 
     # n_inputs = model.fc.in_features
     #
@@ -269,8 +269,7 @@ model, _ = train(
     dataloaders['train'],
     dataloaders['val'],
     save_file_name=save_file_name,
-    max_epochs_stop=5,
-    n_epochs=1
+    n_epochs=50
     )
 
 from lucent.optvis import render, param, transform, objectives
@@ -279,21 +278,25 @@ from lucent.optvis import render, param, transform, objectives
 def weight_vector(layer, weight, batch=None):
     @objectives.handle_batch(batch)
     def inner(model):
-        current_layer = model(layer)
-
-        print(current_layer.shape)
-        current_layer = current_layer.view(-1, 1)
-        print(current_layer.shape)
-
-        print(weight.shape)
+        current_layer = model(layer).view(-1, 1)
         return -torch.matmul(weight, current_layer).mean()
     return inner
 
 device = torch.device(gpu if torch.cuda.is_available() else "cpu")
 model.to(device).eval()
 obj = weight_vector("avgpool", model.classifier[0].weight)
-render.render_vis(model, obj, show_image=False, save_image=True, image_name="lucent1.png")
+render.render_vis(model,
+                  obj,
+                  show_image=False,
+                  save_image=True,
+                  image_name="lucentweight.png")
 
+obj = "classifier"
+render.render_vis(model,
+                  obj,
+                  show_image=False,
+                  save_image=True,
+                  image_name="lucentlayer.png")
 #
 # transform = transforms.Compose([
 #  transforms.Resize(256),
