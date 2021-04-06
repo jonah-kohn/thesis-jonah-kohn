@@ -74,8 +74,8 @@ def get_pretrained_model():
     model = models.vgg19(pretrained=True)
 
     #Freeze trained layers
-    # for param in model.parameters():
-    #     # param.requires_grad = False
+    for param in model.parameters():
+        # param.requires_grad = False
 
     # n_inputs = model.fc.in_features
     #
