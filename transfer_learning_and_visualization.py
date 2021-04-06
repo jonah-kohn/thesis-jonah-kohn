@@ -25,7 +25,7 @@ from captum.attr import Occlusion
 from captum.attr import NoiseTunnel
 from captum.attr import visualization as viz
 
-gpu = "cuda:0"
+gpu = "cuda:1"
 
 cwd = os.getcwd()
 datadir = cwd + "/alzheimers_binary/"
