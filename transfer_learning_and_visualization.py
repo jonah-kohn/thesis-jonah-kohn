@@ -297,7 +297,7 @@ render.render_vis(model,
                   obj,
                   show_image=False,
                   save_image=True,
-                  image_name="lucentweight.png")
+                  image_name="lucentweight1.png")
 
 model.to(device).eval()
 obj = neg_weight_vector("avgpool", model.classifier[0].weight)
@@ -305,15 +305,15 @@ render.render_vis(model,
                   obj,
                   show_image=False,
                   save_image=True,
-                  image_name="lucentweightneg.png")
+                  image_name="lucentweightneg1.png")
 
 model.to(device).eval()
-obj = "classifier"
+obj = "classifier:0"
 render.render_vis(model,
                   obj,
                   show_image=False,
                   save_image=True,
-                  image_name="lucentlayer.png")
+                  image_name="lucentlayer1.png")
 #
 # transform = transforms.Compose([
 #  transforms.Resize(256),
