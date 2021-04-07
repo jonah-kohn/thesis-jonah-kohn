@@ -126,7 +126,7 @@ def train(model,
           train_loader,
           valid_loader,
           save_file_name,
-          max_epochs_stop=20,
+          max_epochs_stop=4,
           n_epochs=20,
           print_every=2):
 
@@ -282,6 +282,14 @@ def weight_vector(layer, weight, batch=None):
         return -torch.matmul(weight, current_layer).mean()
     return inner
 
+@objectives.wrap_objective()
+def neg_weight_vector(layer, weight, batch=None):
+    @objectives.handle_batch(batch)
+    def inner(model):
+        current_layer = model(layer).view(-1, 1)
+        return torch.matmul(weight, current_layer).mean()
+    return inner
+
 device = torch.device(gpu if torch.cuda.is_available() else "cpu")
 model.to(device).eval()
 obj = weight_vector("avgpool", model.classifier[0].weight)
@@ -290,6 +298,14 @@ render.render_vis(model,
                   show_image=False,
                   save_image=True,
                   image_name="lucentweight.png")
+
+model.to(device).eval()
+obj = neg_weight_vector("avgpool", model.classifier[0].weight)
+render.render_vis(model,
+                  obj,
+                  show_image=False,
+                  save_image=True,
+                  image_name="lucentweightneg.png")
 
 model.to(device).eval()
 obj = "classifier"
